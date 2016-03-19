@@ -1,0 +1,127 @@
+<html>
+<head>
+	<title>Ajax Streaming Test</title>
+</head>
+<body>
+	<style scoped>
+		* {
+			font: 12px "Courier New", serif;
+		}
+		a {
+			text-decoration: underline;
+			color: black;
+		}
+		a:hover {
+			color: darkred;
+		}
+		.container {
+			width: 800px;
+			margin: 10px auto;
+		}
+		.source {
+			float: left;
+			width: 500px;
+		}
+		.demo {
+			float: right;
+			width: 290px;
+		}
+		#demo-content {
+			height: 500px;
+			border: 1px solid #b2ac9c;
+			background: #e9e2ce;
+			color: #444444;
+			padding: 10px;
+		}
+		#test {
+			text-align: center;
+			display: block;
+		}
+		pre {
+			padding: 10px;
+			background: #181818;
+			color: #f8f8f8;
+		}
+	</style>
+
+	<div class="container">
+		<a href="#" id="test">Start Streaming</a>
+
+		<div class="source">
+			<p>deploy.sh</p>
+
+<pre style="background:#181818;color:#f8f8f8"><span style="color:#5f5a60;font-style:italic">#!/bin/bash</span>
+<span style="color:#cda869">for</span> <span style="color:#7587a6">i</span> <span style="color:#cda869">in</span> {1..10}
+<span style="color:#cda869">do</span>
+   <span style="color:#dad085">echo</span> <span style="color:#8f9d6a">"Some staff #<span style="color:#8a9a95">$i</span>"</span>
+   sleep 1
+<span style="color:#cda869">done</span>
+
+</pre>
+
+			<br>
+			<p>stream.php</p>
+<pre style="background:#181818;color:#f8f8f8">&lt;?php
+
+<span style="color:#7587a6">$fp</span> <span style="color:#cda869">=</span> <span style="color:#dad085">popen</span>(<span style="color:#8f9d6a">'/bin/bash deploy.sh'</span>, <span style="color:#8f9d6a">'r'</span>);
+
+<span style="color:#cda869">while</span> (<span style="color:#7587a6">$line</span> <span style="color:#cda869">=</span> <span style="color:#dad085">stream_get_line</span>(<span style="color:#7587a6">$fp</span>, <span style="color:#cf6a4c">65535</span>, <span style="color:#cf6a4c">PHP_EOL</span>)) {
+    <span style="color:#dad085">echo</span> <span style="color:#7587a6">$line</span> <span style="color:#cda869">.</span> <span style="color:#cf6a4c">PHP_EOL</span>;
+
+    <span style="color:#dad085">ob_flush</span>();
+    <span style="color:#dad085">flush</span>();
+}
+</pre>
+
+			<br>
+			<p>index.html</p>
+<pre style="background:#181818;color:#f8f8f8">&lt;<span style="color:#e0c589">script</span> <span style="color:#e0c589">type</span>=<span style="color:#8f9d6a">"text/javascript"</span>>
+    <span style="color:#9b859d">document</span>.<span style="color:#dad085">getElementById</span>(<span style="color:#8f9d6a">'test'</span>).<span style="color:#9b703f">onclick</span> <span style="color:#cda869">=</span> <span style="color:#f9ee98">function</span>() {
+        <span style="color:#f9ee98">var</span> xhr <span style="color:#cda869">=</span> <span style="color:#cda869">new</span> <span style="color:#9b703f">XMLHttpRequest</span>();
+        xhr.<span style="color:#dad085">open</span>(<span style="color:#8f9d6a">'GET'</span>, <span style="color:#8f9d6a">'stream.php'</span>, <span style="color:#cf6a4c">true</span>);
+
+        <span style="color:#9b859d">xhr</span>.<span style="color:#9b703f">onprogress</span> <span style="color:#cda869">=</span> <span style="color:#f9ee98">function</span>(e) {
+            <span style="color:#9b703f">console</span><span style="color:#dad085">.log</span>(e.currentTarget.<span style="color:#cf6a4c">responseText</span>);
+        };
+
+        <span style="color:#9b859d">xhr</span>.<span style="color:#9b703f">onreadystatechange</span> <span style="color:#cda869">=</span> <span style="color:#f9ee98">function</span>() {
+            <span style="color:#cda869">if</span> (xhr.<span style="color:#cf6a4c">readyState</span> <span style="color:#cda869">==</span> <span style="color:#cf6a4c">4</span>) {
+                <span style="color:#9b703f">console</span><span style="color:#dad085">.log</span>(<span style="color:#8f9d6a">'Complete!'</span>);
+                <span style="color:#9b703f">console</span><span style="color:#dad085">.log</span>(xhr.<span style="color:#cf6a4c">responseText</span>);
+            }
+        };
+
+        xhr.<span style="color:#dad085">send</span>();
+    };
+&lt;/<span style="color:#e0c589">script</span>>
+</pre>
+		</div>
+		<div class="demo">
+			<p>Output</p>
+			<div id="demo-content"></div>
+		</div>
+	</div>
+
+
+<script type="text/javascript">
+	document.getElementById('test').onclick = function() {
+		var xhr = new XMLHttpRequest();
+		xhr.open('GET', 'stream.php', true);
+
+		xhr.onprogress = function(e) {
+			document.getElementById('demo-content').innerText = e.currentTarget.responseText;
+			console.log(e.currentTarget.responseText);
+		};
+
+		xhr.onreadystatechange = function() {
+			if (xhr.readyState == 4) {
+				console.log('Complete!');
+				console.log(xhr.responseText);
+			}
+		};
+
+		xhr.send();
+	};
+</script>
+</body>
+</html>
